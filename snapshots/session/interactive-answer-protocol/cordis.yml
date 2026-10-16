@@ -1,0 +1,7 @@
+- insert:
+    - id: interactive-answer-source
+      name: '../../../packages/deliverables/tool-interactive-answer/tests/fixtures/source-wrapped-query.ts'
+    - id: interactive-answer
+      name: '@deepseek-ai/dsh-tool-interactive-answer'
+      config:
+        sourceTools: [query_observations]

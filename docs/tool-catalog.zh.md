@@ -27,6 +27,7 @@
 | `@deepseek-ai/dsh-tools` | `run_code` | `ctx.workingDirectory (Agent executions)`、`ctx.tools`、`ctx.ptcRuntime (execution time)`、`ctx.systemPrompt` | `tool/call`、`one tool/ptc-dispatch-start + tool/ptc-dispatch pair per bridged sub-call`、`tool/result` | - | 在 `mode: ptc` 下，它由工具注册表所有，作为可过滤能力层之外的保留传输机制（参见 PTC mode Agent Note）。在 `ptc` 下，它是注册表对协议格式（wire format）的唯一贡献；其他可见能力在使用已加载运行时语言生成的 SDK 章节中声明。程序通过 binding 调用这些能力，调用按照原生并发约定调度：启动顺序和策略遵循提交顺序，并发安全的函数体最多重叠执行 `maxParallelSubCalls` 个。调用会重新进入完整且受守卫保护的工具流水线，并将每个嵌套执行关联到此外层结果。 |
 | `@deepseek-ai/dsh-plan-mode` | `exit_plan_mode` | `ctx.tools`、`ctx.systemPrompt`、`ctx.userQuestions (execution time, opportunistic)` | `tool/call`、`plan/mode inactive on an approved review`、`tool/result` | - | 规划未激活时，exit_plan_mode 仍保留在面向模型的 schema 中，这样状态转换不会在规划策略变更之外额外造成工具目录变动。其执行路径会拒绝规划模式之外的调用；在规划模式下，它通过用户交互 seam 提交计划（批准／根据反馈继续规划），批准后会在步骤边界记录规划模式已停用。 |
 | `@deepseek-ai/dsh-tool-bash` | `bash` | `ctx.workingDirectory`、`ctx.tools`、`ctx.shell`、`ctx.systemPrompt`、`ctx.shellEnv`、`ctx.jobs for run_in_background and the job-backed foreground path` | `tool/call`、`tool/result` | - | bash 工具是 bash 执行器 seam 面向模型的消费方。组合中有 job 注册表时，每次调用一启动就注册到通用 `ctx.jobs` 运行时，并通过 `job_*` 工具（来自 `@deepseek-ai/dsh-tool-jobs`）收集／停止；没有注册表或 `enableRunInBackground: false` 时，工具注册不带 `run_in_background` 参数的纯前台 schema。 |
+| `@deepseek-ai/dsh-tool-interactive-answer` | `interactive_answer` | `ctx.tools`, `ctx.sessionProjections` | `tool/call`, `tool/result` | - | 可选的有来源依据的展示；sourceTools 明确声明部署批准的来源工具，客户端配套插件渲染已记录结果。 |
 | `@deepseek-ai/dsh-tool-present` | `present` | `ctx.workingDirectory`、`ctx.tools`, `ctx.fs`, `ctx.sessionProjections` | `tool/call`, `deliverables/presented 在成功的最终结果之后`, `tool/result` | - | 交付归调用方 Session 所有；Web ui-deliverables 提供源文件打开与卡片。 |
 | `@deepseek-ai/dsh-tool-pwsh` | `pwsh` | `ctx.workingDirectory`、`ctx.tools`、`ctx.shell`、`ctx.systemPrompt`、`ctx.shellEnv`、`ctx.jobs for run_in_background and the job-backed foreground path` | `tool/call`、`tool/result` | - | pwsh 工具是 Windows 组合中 bash 执行器 seam 的 PowerShell 方言消费方（由 `@deepseek-ai/dsh-pwsh-local` 等 PowerShell 执行器为 `ctx.shell` 提供后端）；除沙箱接口外，它逐项对应 bash 工具调用。使用 `run_in_background` 的运行会注册到通用 `ctx.jobs` 运行时，并通过 `job_*` 工具收集／停止；托管的 `DSH_*` 环境来自 `@deepseek-ai/dsh-shell-env`。每次调用都在新进程中运行，不使用持久 PTY 会话。路径采用原生 `C:\...` 形式，变量采用 `$env:NAME`。 |
 | `@deepseek-ai/dsh-tool-cordis` | `cordis_inspect_list`, `cordis_inspect_query` | `ctx.tools`, `ctx.cordisInspect` | `tool/call`, `tool/result` | - | 创造模式提供两个只读运行时检查工具。Cordis host runner 提供检查注册表；Client 查询需要已连接页面。持久化变更编写为组合包，再通过 plugin_manager 安装。 |
@@ -692,6 +693,102 @@ ask_user_question 默认保持原有阻塞行为；设置 `mode: timed` 后才�
 来源：[`packages/shell/tool-bash/src/index.ts`](../packages/shell/tool-bash/src/index.ts)
 
 bash 工具是 bash 执行器 seam 面向模型的消费方。组合中有 job 注册表时，每次调用一启动就注册到通用 `ctx.jobs` 运行时，并通过 `job_*` 工具（来自 `@deepseek-ai/dsh-tool-jobs`）收集／停止；没有注册表或 `enableRunInBackground: false` 时，工具注册不带 `run_in_background` 参数的纯前台 schema。
+
+<a id="deepseek-aidsh-tool-interactive-answer"></a>
+
+## `@deepseek-ai/dsh-tool-interactive-answer`
+
+### `interactive_answer`
+
+从当前对话中先前成功的 JSON 工具结果展示表格、趋势图、帕累托图或追溯时间线。使用 sourceCallId 引用来源并选择原始字段，不填写虚构业务值。rowsPath 和列路径使用属性名或数组下标组成的数组。保留查询告警、空值、单位及时间标签。图表要求数值，时间线保留来源顺序。证据不可用或过大时重新查询。
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "sourceCallId": {
+      "type": "string",
+      "description": "Call id of the successful source query in this conversation."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short answer title."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "table",
+        "trend",
+        "pareto",
+        "timeline"
+      ]
+    },
+    "jsonPath": {
+      "type": "array",
+      "description": "Optional path to JSON text inside a protocol wrapper, for example [\"content\",\"0\",\"text\"]. rowsPath is relative to the decoded document. Omit for direct JSON documents.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rowsPath": {
+      "type": "array",
+      "description": "Property path from source JSON to its row array; [] selects a root array.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "description": "Property path from one row to a scalar; [] selects a scalar row.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "path"
+        ]
+      }
+    },
+    "labelColumn": {
+      "type": "integer",
+      "description": "Zero-based label or time column index."
+    },
+    "valueColumn": {
+      "type": "integer",
+      "description": "Zero-based numeric value column index; use 0 for tables/timelines without measurements."
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit from the source or metric definition; empty when absent. No unit conversion is performed."
+    }
+  },
+  "required": [
+    "sourceCallId",
+    "title",
+    "kind",
+    "rowsPath",
+    "columns",
+    "labelColumn",
+    "valueColumn",
+    "unit"
+  ]
+}
+```
+
+来源： [`packages/deliverables/tool-interactive-answer/src/index.ts`](../packages/deliverables/tool-interactive-answer/src/index.ts)
+
+可选的有来源依据的展示；sourceTools 明确声明部署批准的来源工具。客户端配套插件渲染已记录的结果。
 
 <a id="deepseek-aidsh-tool-present"></a>
 
