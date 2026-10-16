@@ -43,6 +43,7 @@ export function apply(ctx: Context, config: Config): void {
       sourceCallId: { type: 'string', required: true, description: 'Call id of the successful source query in this conversation.' },
       title: { type: 'string', required: true, description: 'Short answer title.' },
       kind: { type: 'string', required: true, enum: ['table', 'trend', 'pareto', 'timeline'] },
+      jsonPath: { type: 'array', items: { type: 'string' }, description: 'Optional path to JSON text inside a protocol wrapper, for example ["content","0","text"]. rowsPath is relative to the decoded document. Omit for direct JSON documents.' },
       rowsPath: { type: 'array', required: true, items: { type: 'string' }, description: 'Property path from source JSON to its row array; [] selects a root array.' },
       columns: { type: 'array', required: true, items: { type: 'object', additionalProperties: false, properties: {
         title: { type: 'string', required: true },

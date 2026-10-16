@@ -35,6 +35,8 @@ export interface InteractiveAnswer {
   valueColumn: number
   unit: string
   source: AnswerSource
+  /** Optional path to a JSON text document inside the original result. */
+  jsonPath?: string[]
   rowsPath: string[]
 }
 

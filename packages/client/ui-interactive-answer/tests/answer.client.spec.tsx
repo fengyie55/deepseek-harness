@@ -51,6 +51,16 @@ describe('interactive answer cards', () => {
     expect(prompt).toContain('partial coverage')
   })
 
+  it('retains coverage from explicitly decoded protocol JSON and rejects a damaged selector', () => {
+    const wrapped = { ...answer, jsonPath: ['content', '0', 'text'], source: { ...answer.source,
+      document: { content: [{ type: 'text', text: JSON.stringify(answer.source.document) }] } } }
+    const restored = readAnswer(block(wrapped))
+    expect(restored).not.toBeNull()
+    expect(followupText(wrapped, 1, labels)).toContain('partial coverage')
+    expect(readAnswer(block({ ...wrapped, jsonPath: ['missing'] }))).toBeNull()
+    expect(readAnswer(block({ ...wrapped, source: { ...wrapped.source, document: { content: [{ text: 'invalid' }] } } }))).toBeNull()
+  })
+
   it('keeps records visible after admission fails and permits a retry', async () => {
     const send = vi.fn().mockRejectedValueOnce(new Error('denied')).mockResolvedValueOnce(undefined)
     const view = render(<AnswerContent answer={answer} send={send} t={t} />)

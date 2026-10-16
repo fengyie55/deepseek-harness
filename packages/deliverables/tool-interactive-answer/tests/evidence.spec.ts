@@ -52,6 +52,20 @@ describe('interactive evidence', () => {
       .toThrow('"sourceCallId":"query-1","tool":"query","seq":1')
   })
 
+  it('selects embedded JSON explicitly and retains the complete transport result', () => {
+    const wrapper = { content: [{ type: 'text', text: JSON.stringify(document) }], isError: false }
+    const selected = { ...request, jsonPath: ['content', '0', 'text'] }
+    const answer = buildAnswer(selected, evidence(wrapper), limits)
+    expect(answer.rows).toEqual([['SN 001 02', 0], ['SN 001 03', null]])
+    expect(answer.source.document).toEqual(wrapper)
+    expect(answer.jsonPath).toEqual(selected.jsonPath)
+    expect(() => buildAnswer({ ...selected, jsonPath: ['content'] }, evidence(wrapper), limits)).toThrow('JSON text')
+    expect(() => buildAnswer(selected, evidence({ ...wrapper, isError: true }), limits)).toThrow('Source reports failure')
+    const failed = { content: [{ type: 'text', text: JSON.stringify({ status: 'error' }) }] }
+    expect(() => buildAnswer(selected, evidence(failed), limits)).toThrow('Source reports failure')
+    expect(() => buildAnswer(selected, evidence({ content: [{ type: 'text', text: 'invalid' }] }), limits)).toThrow(SyntaxError)
+  })
+
   it.each([
     [{ rowsPath: ['absent'] }, 'Source field missing'],
     [{ columns: [{ title: 'Absent', path: ['absent'] }], valueColumn: 0 }, 'Source field missing'],

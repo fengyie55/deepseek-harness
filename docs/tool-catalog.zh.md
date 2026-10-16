@@ -670,6 +670,13 @@ bash 工具是 bash 执行器 seam 面向模型的消费方。组合中有 job �
         "timeline"
       ]
     },
+    "jsonPath": {
+      "type": "array",
+      "description": "Optional path to JSON text inside a protocol wrapper, for example [\"content\",\"0\",\"text\"]. rowsPath is relative to the decoded document. Omit for direct JSON documents.",
+      "items": {
+        "type": "string"
+      }
+    },
     "rowsPath": {
       "type": "array",
       "description": "Property path from source JSON to its row array; [] selects a root array.",

@@ -239,6 +239,13 @@
           "unit": {
             "type": "string",
             "description": "Unit from the source or metric definition; empty when absent. No unit conversion is performed."
+          },
+          "jsonPath": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional path to JSON text inside a protocol wrapper, for example [\"content\",\"0\",\"text\"]. rowsPath is relative to the decoded document. Omit for direct JSON documents."
           }
         },
         "required": [

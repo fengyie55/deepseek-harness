@@ -12,12 +12,32 @@ const answerSchema = z.object({
   rows: z.array(z.array(cell)).min(1),
   labelColumn: z.number().int().nonnegative(), valueColumn: z.number().int().nonnegative(), unit: z.string(),
   source: z.object({ callId: z.string(), name: z.string(), seq: z.number().int().nonnegative(), arguments: z.json(), document: z.json() }),
+  jsonPath: z.array(z.string()).optional(),
   rowsPath: z.array(z.string()),
 }).refine(answer => answer.labelColumn < answer.columns.length && answer.valueColumn < answer.columns.length
   && answer.rows.every(row => row.length === answer.columns.length))
 
 /** Browser-admitted data retains the original call id as wire text. */
-export type Answer = Omit<InteractiveAnswer, 'source'> & { source: z.infer<typeof answerSchema>['source'] }
+export type Answer = Omit<InteractiveAnswer, 'source' | 'jsonPath'> & Pick<z.infer<typeof answerSchema>, 'source' | 'jsonPath'>
+
+function selectionDocument(answer: Answer): JsonValue | undefined {
+  let value = answer.source.document
+  if (answer.jsonPath === undefined) return value
+  for (const key of answer.jsonPath) {
+    if (value === null || typeof value !== 'object' || !Object.hasOwn(value, key)) return undefined
+    const child: JsonValue | undefined = Array.isArray(value) ? value[Number(key)] : value[key]
+    if (child === undefined) return undefined
+    value = child
+  }
+  if (typeof value !== 'string') return undefined
+  try {
+    const parsed = z.json().safeParse(JSON.parse(value))
+    return parsed.success ? parsed.data : undefined
+  } catch (error) {
+    if (error instanceof SyntaxError) return undefined
+    throw error
+  }
+}
 
 /**
  * Retain query status and coverage beside a selected row, without repeating source row arrays.
@@ -25,8 +45,8 @@ export type Answer = Omit<InteractiveAnswer, 'source'> & { source: z.infer<typeo
  * @returns original envelope fields other than data rows.
  */
 export function evidenceContext(answer: Answer): Record<string, JsonValue> {
-  const doc = answer.source.document
-  if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) return {}
+  const doc = selectionDocument(answer)
+  if (doc == null || typeof doc !== 'object' || Array.isArray(doc)) return {}
   const fields = new Set(['status', 'warnings', 'coverage', 'complete', 'readiness', 'stop_reason',
     'quality', 'limitations', 'time_range', 'time_zone', 'timezone', 'unit', 'units', 'error'])
   const select = (record: Record<string, JsonValue>) => Object.fromEntries(Object.entries(record).filter(([key]) => fields.has(key)))
@@ -71,6 +91,7 @@ export function readAnswer(block: Pick<ToolResultNode, 'isError' | 'meta' | 'con
   const parsed = answerSchema.safeParse(value)
   if (!parsed.success) return null
   const answer = parsed.data
+  if (selectionDocument(answer) === undefined) return null
   if ((answer.kind === 'trend' || answer.kind === 'pareto') && answer.rows.some((row) => {
     const value = row[answer.valueColumn]
     return value !== null && (typeof value !== 'number' || (answer.kind === 'pareto' && value < 0))

@@ -12,6 +12,7 @@ export const requestSchema = z.strictObject({
   sourceCallId: z.string().min(1),
   title: z.string().trim().min(1).max(200),
   kind: z.enum(['table', 'trend', 'pareto', 'timeline']),
+  jsonPath: pathSchema.optional(),
   rowsPath: pathSchema,
   columns: z.array(z.strictObject({ title: z.string().trim().min(1).max(100), path: pathSchema })).min(1),
   labelColumn: z.number().int().nonnegative(),
@@ -102,6 +103,14 @@ function atPath(value: JsonValue, path: readonly string[]): JsonValue {
   return current
 }
 
+function assertSuccessful(doc: JsonValue): void {
+  if (doc !== null && typeof doc === 'object' && !Array.isArray(doc)) {
+    if (doc.isError === true || doc.error != null || (typeof doc.status === 'string' && !['success', 'partial', 'ready', 'ok', 'completed'].includes(doc.status))) {
+      throw new Error('Source reports failure; obtain successful evidence before displaying an answer')
+    }
+  }
+}
+
 /**
  * Select exact source cells and refuse missing fields, failed envelopes, and oversized output.
  * @param input - model-supplied display selection.
@@ -116,11 +125,13 @@ export function buildAnswer(input: unknown, sources: AnswerSources, limits: Limi
     const available = sources.settled.map(item => ({ sourceCallId: item.callId, tool: item.name, seq: item.seq }))
     throw new Error(`Source unavailable. Use an exact sourceCallId from available sources (not a document request_id or bundle_id): ${JSON.stringify(available)}. If none are available, query again for a bounded JSON result in this session.`)
   }
-  const doc = source.document
-  if (doc !== null && typeof doc === 'object' && !Array.isArray(doc)) {
-    if (doc.isError === true || doc.error != null || (typeof doc.status === 'string' && !['success', 'partial', 'ready', 'ok', 'completed'].includes(doc.status))) {
-      throw new Error('Source reports failure; obtain successful evidence before displaying an answer')
-    }
+  let doc = source.document
+  assertSuccessful(doc)
+  if (args.jsonPath !== undefined) {
+    const text = atPath(doc, args.jsonPath)
+    if (typeof text !== 'string') throw new Error('jsonPath must select JSON text')
+    doc = z.json().parse(JSON.parse(text))
+    assertSuccessful(doc)
   }
   if (args.columns.length > limits.maxColumns) throw new Error('Too many selected columns; select fewer fields')
   if (args.labelColumn >= args.columns.length || args.valueColumn >= args.columns.length) throw new Error('Selected column index is out of range')
@@ -140,7 +151,7 @@ export function buildAnswer(input: unknown, sources: AnswerSources, limits: Limi
   const answer: InteractiveAnswer = {
     format: 'interactive-answer', version: 1, title: args.title, kind: args.kind, columns: args.columns, rows,
     labelColumn: args.labelColumn, valueColumn: args.valueColumn, unit: args.unit,
-    source, rowsPath: args.rowsPath,
+    source, rowsPath: args.rowsPath, ...(args.jsonPath === undefined ? {} : { jsonPath: args.jsonPath }),
   }
   if (byteLength(answer) > limits.maxResultBytes) throw new Error('Answer exceeds configured byte limit; query fewer rows or select fewer fields')
   return answer

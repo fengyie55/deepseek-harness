@@ -666,6 +666,13 @@ Show a table, trend, Pareto chart, or trace timeline from an earlier successful 
         "timeline"
       ]
     },
+    "jsonPath": {
+      "type": "array",
+      "description": "Optional path to JSON text inside a protocol wrapper, for example [\"content\",\"0\",\"text\"]. rowsPath is relative to the decoded document. Omit for direct JSON documents.",
+      "items": {
+        "type": "string"
+      }
+    },
     "rowsPath": {
       "type": "array",
       "description": "Property path from source JSON to its row array; [] selects a root array.",
