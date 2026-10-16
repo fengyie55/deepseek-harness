@@ -5,7 +5,7 @@ import type { ConversationLocationDataStore, ConversationTurnDataMap } from '@de
 import type { ChatNodeHookContext, ChatNodeOwnerProps, ChatViewSlotProps, UsePresentation } from '../contract/slots.ts'
 import type { ChatNode } from '../contract/chat-nodes.ts'
 import type { ChatNodeStore } from '../contract/snapshot.ts'
-import { TURN_PROCESS_INDEPENDENT_KINDS, turnProcessAlwaysOpen } from '../contract/turn-process.ts'
+import { isTurnProcessIndependent, turnProcessAlwaysOpen } from '../contract/turn-process.ts'
 import { storedTurnProcessEntry } from '../stores.ts'
 import { useSearchableHidden } from './searchable-hidden.ts'
 import css from './ChatView.module.css'
@@ -77,7 +77,7 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
     && (processPresentation.turnStarted || processPresentation.turnClosed)
   const processMember = routedNode !== undefined
     && processWindowReady
-    && !TURN_PROCESS_INDEPENDENT_KINDS.has(routedNode.kind)
+    && !isTurnProcessIndependent(routedNode)
     && routedNode.anchorSeq >= processSpec.processStartSeq
     && (liveProcess || processSpec.answerAnchorSeq === null || routedNode.anchorSeq < processSpec.answerAnchorSeq
       || (groupPart === 'reasoning' && routedNode.kind === 'assistant-step' && routedNode.data.step === processSpec.answerStep))

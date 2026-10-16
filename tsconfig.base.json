@@ -28,6 +28,9 @@
     // not declaration path aliases, keep each package/vendor source compiled
     // under its own tsconfig boundary.
     "paths": {
+      "@deepseek-ai/dsh-client-ui-interactive-answer": ["./packages/client/ui-interactive-answer/src/index.ts"],
+      "@deepseek-ai/dsh-client-ui-interactive-answer/client": ["./packages/client/ui-interactive-answer/src/client/index.ts"],
+      "@deepseek-ai/dsh-tool-interactive-answer/types": ["./packages/deliverables/tool-interactive-answer/src/types.ts"],
       "@deepseek-ai/dsh-client-product-analytics": ["./packages/client/product-analytics/src/index.ts"],
       "@deepseek-ai/dsh-client-product-analytics/types": ["./packages/client/product-analytics/src/events.ts"],
       "@deepseek-ai/dsh-client-product-analytics/client": ["./packages/client/product-analytics/src/client/index.ts"],
@@ -488,6 +491,7 @@
       "@deepseek-ai/dsh-tool-fs": ["./packages/fs/tool-fs/src"],
       "@deepseek-ai/dsh-tool-fs-search": ["./packages/fs/tool-fs-search/src"],
       "@deepseek-ai/dsh-tool-goal": ["./packages/goal/tool-goal/src"],
+      "@deepseek-ai/dsh-tool-interactive-answer": ["./packages/deliverables/tool-interactive-answer/src"],
       "@deepseek-ai/dsh-tool-jobs": ["./packages/jobs/tool-jobs/src"],
       "@deepseek-ai/dsh-tool-lsp": ["./packages/lsp/tool-lsp/src"],
       "@deepseek-ai/dsh-tool-present": ["./packages/deliverables/tool-present/src"],

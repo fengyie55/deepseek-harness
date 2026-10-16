@@ -10,6 +10,8 @@ export interface ChatConversationViewNode extends ConversationViewNode {
   readonly anchorSeq: number
   readonly location: ConversationLocation
   readonly visibility: 'visible' | 'hidden'
+  /** Keep a result card outside collapsible process groups; omission preserves ordinary Chat segmentation. */
+  readonly processGroup?: 'independent'
 }
 
 /** Merge-extensible payload registry keyed by final Chat renderer kind. */

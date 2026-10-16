@@ -47,6 +47,7 @@ import * as ToolPwshPersistent from '@deepseek-ai/dsh-tool-pwsh-persistent'
 import CordisHostRunner from '@deepseek-ai/dsh-cordis-host-runner'
 import * as ToolCordis from '@deepseek-ai/dsh-tool-cordis'
 import * as ToolPresent from '@deepseek-ai/dsh-tool-present'
+import * as ToolInteractiveAnswer from '@deepseek-ai/dsh-tool-interactive-answer'
 import * as ToolFs from '@deepseek-ai/dsh-tool-fs'
 import * as ToolFsSearch from '@deepseek-ai/dsh-tool-fs-search'
 import * as ToolStrReplaceEditor from '@deepseek-ai/dsh-tool-str-replace-editor'
@@ -280,6 +281,17 @@ const TOOL_PACKAGES: ToolPackage[] = [
     },
     note:
       'The bash tool is the model-facing consumer of the bash executor seam. With a job registry composed every call registers with the generic `ctx.jobs` runtime as it starts, collected/stopped through the `job_*` tools from `@deepseek-ai/dsh-tool-jobs`; without one, or with `enableRunInBackground: false`, the tool registers a foreground-only schema without the `run_in_background` parameter.',
+  },
+  {
+    pkg: '@deepseek-ai/dsh-tool-interactive-answer',
+    dir: 'tool-interactive-answer',
+    source: 'packages/deliverables/tool-interactive-answer/src/index.ts',
+    requires: ['ctx.tools', 'ctx.sessionProjections'],
+    writes: ['tool/call', 'tool/result'],
+    async mount(ctx) {
+      await ctx.plugin(ToolInteractiveAnswer, ToolInteractiveAnswer.Config({ sourceTools: ['mcp__taiji__request_evidence'] }))
+    },
+    note: 'Opt-in source-backed display; sourceTools is an explicit deployment approval list. The client companion renders recorded results.',
   },
   {
     pkg: '@deepseek-ai/dsh-tool-present',

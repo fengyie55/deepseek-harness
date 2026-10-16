@@ -81,6 +81,28 @@ function harness(nodes: readonly ChatConversationViewNode[], currentTimeline = t
 }
 
 describe('Definition-owned Chat process groups', () => {
+  it('keeps an explicitly independent result visible between tool groups', () => {
+    const artifact: ChatConversationViewNode = {
+      key: 'artifact', id: 'artifact', kind: 'custom-result', target: 'chat', anchorSeq: 3,
+      location: { kind: 'turn', turn }, visibility: 'visible', data: {}, processGroup: 'independent',
+    }
+    const h = harness([tool('before', 2), artifact, tool('after', 4)])
+    expect(h.store.entries.map(entry => entry.kind)).toEqual(['group', 'node', 'group'])
+    expect(h.store.entries[1]).toEqual({ kind: 'node', key: 'artifact' })
+  })
+
+  it('regroups an existing result when its process placement changes', () => {
+    const artifact: ChatConversationViewNode = {
+      key: 'artifact', id: 'artifact', kind: 'custom-result', target: 'chat', anchorSeq: 3,
+      location: { kind: 'turn', turn }, visibility: 'visible', data: {},
+    }
+    const h = harness([tool('before', 2), artifact, tool('after', 4)])
+    expect(h.store.entries.map(entry => entry.kind)).toEqual(['group'])
+    h.builder.apply({ upserts: [{ ...artifact, processGroup: 'independent' }], timeline })
+    h.commit()
+    expect(h.store.entries.map(entry => entry.kind)).toEqual(['group', 'node', 'group'])
+  })
+
   it.each([
     ['whitespace', '  one\t\n two  ', 'one two'],
     ['empty text', ' \t\n ', 'bash'],
