@@ -16,6 +16,8 @@ export interface ProductPackagePolicy {
  * Optional integrations may be reached by an optional bundle without becoming default capabilities.
  */
 export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolicy>> = {
+  'packages/client/ui-interactive-answer': { category: 'optional', reason: 'Source-backed result cards selected with the explicitly configured interactive-answer tool.' },
+  'packages/deliverables/tool-interactive-answer': { category: 'optional', reason: 'Requires a deployment-approved list of evidence source tools.' },
   'packages/browser-use/browser-use': { category: 'optional', reason: 'Service definition used by explicitly selected browser providers.' },
   'packages/computer-use/computer-use': { category: 'optional', reason: 'Service definition used by explicitly selected computer providers.' },
   'packages/lsp/lsp': { category: 'optional', reason: 'Service definition for deployment-configured language servers.' },

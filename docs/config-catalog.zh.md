@@ -3828,6 +3828,36 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-goal -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-interactive-answer -->
+<a id="deepseek-aidsh-tool-interactive-answer"></a>
+
+## `@deepseek-ai/dsh-tool-interactive-answer`
+
+- `inject`: `tools` · `sessionProjections`
+- `source`: [`packages/deliverables/tool-interactive-answer/src/index.ts:11`](../packages/deliverables/tool-interactive-answer/src/index.ts)
+
+```ts config-catalog
+/** Tool and evidence-retention limits, configurable per profile. */
+export interface Config extends Limits {}
+
+/** Deployment bounds applied to evidence retention and complete answers. */
+export interface Limits {
+  /** Exact tool names whose JSON results may supply displayed business records. */
+  sourceTools: string[]
+  /** Maximum pending calls and settled evidence records retained per session, each. */
+  maxSources: number
+  /** Maximum UTF-8 bytes of one retained source, including query arguments. */
+  maxSourceBytes: number
+  /** Maximum source row count; larger arrays require a narrower query. */
+  maxRows: number
+  /** Maximum displayed scalar fields per source row. */
+  maxColumns: number
+  /** Maximum UTF-8 bytes of the complete serialized answer, including its source. */
+  maxResultBytes: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-tool-interactive-answer -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-tool-jobs -->
 <a id="deepseek-aidsh-tool-jobs"></a>
 
@@ -4608,6 +4638,7 @@ export interface Config {
 | `@deepseek-ai/dsh-client-ui-entry-customization` | — | [`packages/client/ui-entry-customization/src/index.ts`](../packages/client/ui-entry-customization/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-goal` | — | [`packages/client/ui-goal/src/index.ts`](../packages/client/ui-goal/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-input-trigger` | — | [`packages/client/ui-input-trigger/src/index.ts`](../packages/client/ui-input-trigger/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-interactive-answer` | — | [`packages/client/ui-interactive-answer/src/index.ts`](../packages/client/ui-interactive-answer/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-jobs` | — | [`packages/client/ui-jobs/src/index.ts`](../packages/client/ui-jobs/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-layout` | — | [`packages/client/ui-layout/src/index.ts`](../packages/client/ui-layout/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-message-feedback` | — | [`packages/client/ui-message-feedback/src/index.ts`](../packages/client/ui-message-feedback/src/index.ts) |

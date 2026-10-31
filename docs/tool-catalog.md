@@ -23,6 +23,7 @@ This table connects model-visible tool names to the plugin package and service s
 | `@deepseek-ai/dsh-tools` | `run_code` | `ctx.workingDirectory (Agent executions)`, `ctx.tools`, `ctx.ptcRuntime (execution time)`, `ctx.systemPrompt` | `tool/call`, `one tool/ptc-dispatch-start + tool/ptc-dispatch pair per bridged sub-call`, `tool/result` | - | Owned by the tool registry as a reserved transport outside filterable capability layers under `mode: ptc` (see the PTC mode Agent Note). Under `ptc` it is the registry's only wire contribution; the other visible capabilities are declared in a generated SDK section in the loaded runtime's language, and a program calls them through bindings scheduled under the native concurrency contract (submission-ordered starts and policy; concurrency-safe bodies overlap up to `maxParallelSubCalls`) that re-enter the complete guarded tool pipeline and link each nested execution to this outer result. |
 | `@deepseek-ai/dsh-plan-mode` | `exit_plan_mode` | `ctx.tools`, `ctx.systemPrompt`, `ctx.userQuestions (execution time, opportunistic)` | `tool/call`, `plan/mode inactive on an approved review`, `tool/result` | - | exit_plan_mode stays in the model-facing schema while planning is inactive so transitions add no tool-catalog churn on top of the plan-policy change. Its execute path rejects calls outside plan mode; in plan mode it presents the plan over the user-questions seam (approve / keep planning with feedback), and approval logs plan mode inactive at the step boundary. |
 | `@deepseek-ai/dsh-tool-bash` | `bash` | `ctx.workingDirectory`, `ctx.tools`, `ctx.shell`, `ctx.systemPrompt`, `ctx.shellEnv`, `ctx.jobs for run_in_background and the job-backed foreground path` | `tool/call`, `tool/result` | - | The bash tool is the model-facing consumer of the bash executor seam. With a job registry composed every call registers with the generic `ctx.jobs` runtime as it starts, collected/stopped through the `job_*` tools from `@deepseek-ai/dsh-tool-jobs`; without one, or with `enableRunInBackground: false`, the tool registers a foreground-only schema without the `run_in_background` parameter. |
+| `@deepseek-ai/dsh-tool-interactive-answer` | `interactive_answer` | `ctx.tools`, `ctx.sessionProjections` | `tool/call`, `tool/result` | - | Opt-in source-backed display; sourceTools is an explicit deployment approval list. The client companion renders recorded results. |
 | `@deepseek-ai/dsh-tool-present` | `present` | `ctx.workingDirectory`, `ctx.tools`, `ctx.fs`, `ctx.sessionProjections` | `tool/call`, `deliverables/presented after a successful final result`, `tool/result` | - | Deliveries belong to the calling Session; Web ui-deliverables supplies source-file opening and cards. |
 | `@deepseek-ai/dsh-tool-pwsh` | `pwsh` | `ctx.workingDirectory`, `ctx.tools`, `ctx.shell`, `ctx.systemPrompt`, `ctx.shellEnv`, `ctx.jobs for run_in_background and the job-backed foreground path` | `tool/call`, `tool/result` | - | The pwsh tool is the PowerShell-dialect consumer of the bash executor seam for Windows compositions (a PowerShell executor such as `@deepseek-ai/dsh-pwsh-local` backs `ctx.shell`); it mirrors the bash tool call-for-call minus sandbox controls — `run_in_background` runs register with the generic `ctx.jobs` runtime and are collected/stopped through the `job_*` tools, and the managed `DSH_*` environment comes from `@deepseek-ai/dsh-shell-env`. Each call runs in a fresh process (no persistent PTY session), with native `C:\...` paths and `$env:NAME` variables. |
 | `@deepseek-ai/dsh-tool-cordis` | `cordis_inspect_list`, `cordis_inspect_query` | `ctx.tools`, `ctx.cordisInspect` | `tool/call`, `tool/result` | - | Creator mode provides two read-only runtime inspection tools. The Cordis host runner supplies the inspection registry; Client queries require a connected page. Author persistent changes as bundles and install them with plugin_manager. |
@@ -688,6 +689,102 @@ Execute a bash command (`bash -c`) and return its stdout/stderr. Each call runs 
 Source: [`packages/shell/tool-bash/src/index.ts`](../packages/shell/tool-bash/src/index.ts)
 
 The bash tool is the model-facing consumer of the bash executor seam. With a job registry composed every call registers with the generic `ctx.jobs` runtime as it starts, collected/stopped through the `job_*` tools from `@deepseek-ai/dsh-tool-jobs`; without one, or with `enableRunInBackground: false`, the tool registers a foreground-only schema without the `run_in_background` parameter.
+
+<a id="deepseek-aidsh-tool-interactive-answer"></a>
+
+## `@deepseek-ai/dsh-tool-interactive-answer`
+
+### `interactive_answer`
+
+Show a table, trend, Pareto chart, or trace timeline from an earlier successful JSON tool result in this conversation. Reference its sourceCallId and select exact fields; never supply invented business values. Use rowsPath and column paths as arrays of property names or array indexes. Keep query warnings, nulls, units, and time labels. Charts require numeric values; timeline preserves source order. Re-query if evidence is unavailable or too large.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "sourceCallId": {
+      "type": "string",
+      "description": "Call id of the successful source query in this conversation."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short answer title."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "table",
+        "trend",
+        "pareto",
+        "timeline"
+      ]
+    },
+    "jsonPath": {
+      "type": "array",
+      "description": "Optional path to JSON text inside a protocol wrapper, for example [\"content\",\"0\",\"text\"]. rowsPath is relative to the decoded document. Omit for direct JSON documents.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rowsPath": {
+      "type": "array",
+      "description": "Property path from source JSON to its row array; [] selects a root array.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "description": "Property path from one row to a scalar; [] selects a scalar row.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "path"
+        ]
+      }
+    },
+    "labelColumn": {
+      "type": "integer",
+      "description": "Zero-based label or time column index."
+    },
+    "valueColumn": {
+      "type": "integer",
+      "description": "Zero-based numeric value column index; use 0 for tables/timelines without measurements."
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit from the source or metric definition; empty when absent. No unit conversion is performed."
+    }
+  },
+  "required": [
+    "sourceCallId",
+    "title",
+    "kind",
+    "rowsPath",
+    "columns",
+    "labelColumn",
+    "valueColumn",
+    "unit"
+  ]
+}
+```
+
+Source: [`packages/deliverables/tool-interactive-answer/src/index.ts`](../packages/deliverables/tool-interactive-answer/src/index.ts)
+
+Opt-in source-backed display; sourceTools is an explicit deployment approval list. The client companion renders recorded results.
 
 <a id="deepseek-aidsh-tool-present"></a>
 

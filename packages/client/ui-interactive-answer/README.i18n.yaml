@@ -1,0 +1,46 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/client/ui-interactive-answer/README.md
+/:
+  en: 269a006b7931574f
+  zh: 9a5a9c2cfbdc418e
+/deepseek-ai-dsh-client-ui-interactive-answer:
+  en: 9fd57958027be95a
+  zh: 1f211b5d1dbb00de
+/deepseek-ai-dsh-client-ui-interactive-answer/summary:
+  en: ac14e069285571c6
+  zh: a88d9a28fa4582a2
+/deepseek-ai-dsh-client-ui-interactive-answer/table-of-contents:
+  en: d152484eb41ac6b4
+  zh: e18341a503e2ed14
+/deepseek-ai-dsh-client-ui-interactive-answer/use-this-package:
+  en: e71ce2d6599f027c
+  zh: 08e161eea691781d
+/deepseek-ai-dsh-client-ui-interactive-answer/understand-the-implementation:
+  en: d19c5ddbf6acdb00
+  zh: 1aa6f419bef482a4
+/deepseek-ai-dsh-client-ui-interactive-answer/further-exploration:
+  en: c0a1b64549bdf0d6
+  zh: f80f12035eba5bc5
+/deepseek-ai-dsh-client-ui-interactive-answer/model-experience:
+  en: 215e7ba838619b7b
+  zh: 215e7ba838619b7b
+/deepseek-ai-dsh-client-ui-interactive-answer/model-experience/conversation-follow-up:
+  en: aa37fdc8d6689601
+  zh: aa37fdc8d6689601
+/deepseek-ai-dsh-client-ui-interactive-answer/model-experience/conversation-follow-up/what-the-model-sees:
+  en: 25aa108d6430bd31
+  zh: 10c3cb25975fc711
+/deepseek-ai-dsh-client-ui-interactive-answer/model-experience/conversation-follow-up/token-effect:
+  en: f58e7bc214ab6d49
+  zh: aeed90288a8bd57d
+/deepseek-ai-dsh-client-ui-interactive-answer/model-experience/conversation-follow-up/kv-cache-effect:
+  en: 8b9caddabefddb72
+  zh: 8d1c0c72b7249bb5
+/deepseek-ai-dsh-client-ui-interactive-answer/known-limitations-and-deferred-work:
+  en: 37a156fd9f419a78
+  zh: 5e3de20379f13c76
+/deepseek-ai-dsh-client-ui-interactive-answer/known-limitations-and-deferred-work/dev-note:
+  en: e67f633dc6fe7773
+  zh: 8ec3e73528ddb1a6
