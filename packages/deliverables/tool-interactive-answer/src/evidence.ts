@@ -1,3 +1,4 @@
+import type {} from '@deepseek-ai/dsh-tool-executor-ptc/types'
 /** Bounded evidence selection; display tools never supply replacement business values. */
 import { z } from 'zod'
 import { ToolCallId } from '@deepseek-ai/dsh-llm'

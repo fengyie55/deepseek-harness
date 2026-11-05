@@ -30,8 +30,8 @@ export const inject = ['tools', 'sessionProjections']
  * @param ctx - host registries.
  * @param config - validated evidence and output bounds.
  */
-export function apply(ctx: Context, config: Config): void {
-  ctx.sessionProjections.register({
+export async function apply(ctx: Context, config: Config): Promise<void> {
+  const sourcesProjection = await ctx.sessionProjections.register({
     key: 'interactiveAnswerSources', stateSchema: sourcesSchema,
     init: () => ({ pending: [], settled: [] }),
     apply: (state, event) => foldSources(state, event, config), stateVersion: 1,
@@ -61,7 +61,7 @@ export function apply(ctx: Context, config: Config): void {
     execute(args, exec) {
       if (exec.agent === undefined) throw new Error('interactive_answer requires an owning agent session')
       exec.signal.throwIfAborted()
-      const sources = ctx.sessionProjections.stateOf(exec.agent.session, 'interactiveAnswerSources')
+      const sources = sourcesProjection.stateOf(exec.agent.session)
       if (sources === undefined) throw new Error('Interactive answer source projection is unavailable')
       const answer = buildAnswer(args, sources, config)
       return Promise.resolve({ ...answer, columns: answer.columns.map(column => ({ ...column })), source: { ...answer.source } })
