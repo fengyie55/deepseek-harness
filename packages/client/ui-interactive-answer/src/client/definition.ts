@@ -1,6 +1,7 @@
 /** Standalone conversation answers derive from successful native or nested tool results. */
 import type { SessionEventLike } from '@deepseek-ai/dsh-api-session-controller/client'
-import type {} from '@deepseek-ai/dsh-tools/types'
+import type {} from '@deepseek-ai/dsh-tools'
+import type {} from '@deepseek-ai/dsh-tool-executor-ptc/types'
 import type { ConversationNodeDefinition } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { Answer } from './model.ts'
 import { readAnswer } from './model.ts'

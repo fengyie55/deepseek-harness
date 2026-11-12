@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-tool-interactive-answer",
-  "version": "0.2.2-rc.1",
+  "version": "0.2.2-rc.2",
   "description": "Source-backed interactive tables, charts, and trace timelines",
   "type": "module",
   "main": "lib/index.js",
@@ -52,6 +52,6 @@
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "workspace:~",
-    "zod": "^4.4.3"
+    "zod": "4.6.6"
   }
 }
